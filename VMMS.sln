@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "VMSS-APPG", "VMSS-APPG\VMSS-APPG.deployproj", "{18590DD1-D924-455B-95FD-B0C19A3420D6}"
+EndProject
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "VMSS-Linked", "VMSS-Linked\VMSS-Linked.deployproj", "{2E42CDEF-FBF0-4AC9-B693-E70064D323DC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{18590DD1-D924-455B-95FD-B0C19A3420D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18590DD1-D924-455B-95FD-B0C19A3420D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18590DD1-D924-455B-95FD-B0C19A3420D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18590DD1-D924-455B-95FD-B0C19A3420D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E42CDEF-FBF0-4AC9-B693-E70064D323DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E42CDEF-FBF0-4AC9-B693-E70064D323DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E42CDEF-FBF0-4AC9-B693-E70064D323DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E42CDEF-FBF0-4AC9-B693-E70064D323DC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3AF11B63-04F6-4FAD-8EE1-8553FBEF3C32}
+	EndGlobalSection
+EndGlobal

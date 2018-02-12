@@ -1,0 +1,46 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01-preview/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmssName": {
+      "value": "swarmhosts"
+    },
+    "instanceCount": {
+      "value": 2
+    },
+    "adminUsername": {
+      "value": "cloudadmin"
+    },
+    "adminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/7d0ba820-d01c-4b11-ae4b-e9134b0999d8/resourceGroups/Utility-RG/providers/Microsoft.KeyVault/vaults/McafeeKeyVault"
+        },
+        "secretName": "WindowsPasswordSecret"
+      }
+    },
+    "registrationUrl": {
+      "value": "https://scus-agentservice-prod-1.azure-automation.net/accounts/6d27e7a4-df4b-403c-b80b-8e977b7063c4"
+    },
+    "automationAccountName": {
+      "value": "AutomationAccount"
+    },
+    "registrationKey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/7d0ba820-d01c-4b11-ae4b-e9134b0999d8/resourceGroups/Utility-RG/providers/Microsoft.KeyVault/vaults/McafeeKeyVault"
+        },
+        "secretName": "AzureAutomationKey"
+      }
+    },
+    "vmSku": {
+      "value": "Standard_D2"
+    },
+    "nodeConfigurationName": {
+      "value": "SwarmHost.localhost"
+    },
+    "DSCExtensionTagVersion": {
+      "value": "2"
+    }
+  }
+}

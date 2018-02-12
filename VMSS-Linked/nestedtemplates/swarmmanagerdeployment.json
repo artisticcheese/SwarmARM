@@ -1,0 +1,178 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "name": "[parameters('swarmmanager1Name')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "tags": {
+        "displayName": "swarmmanager1"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('swarmmanager1VmSize')]"
+        },
+        "licenseType": "[parameters('LicenseType')]",
+        "osProfile": {
+          "computerName": "[parameters('swarmmanager1Name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('swarmmanager1ImagePublisher')]",
+            "offer": "[parameters('swarmmanager1ImageOffer')]",
+            "sku": "[parameters('windowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "swarmmanager1OSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', parameters('dockerswarmstorageaccountName')), '2016-01-01').primaryEndpoints.blob, parameters('swarmmanager1StorageAccountContainerName'), '/', parameters('swarmmanager1OSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('swarmmanager1NicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2015-06-15",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
+          ],
+          "tags": {
+            "displayName": "DSC"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "typeHandlerVersion": "2.26",
+            "type":  "DSC",
+            "autoUpgradeMinorVersion": true,
+            "forceUpdateTag": "[parameters('DSCExtensionManagerTagVersion')]",
+            "settings": {
+              "wmfVersion": "latest",
+              "configurationArguments": {
+                "RegistrationKey": {
+                  "UserName": "PLACEHOLDER_DONOTUSE",
+                  "Password": "[parameters('RegistrationKey')]"
+                },
+                "RegistrationUrl": "[parameters('registrationUrl')]",
+                "NodeConfigurationName": "SwarmManager.localhost",
+                "RebootNodeIfNeeded": true
+              }
+            }
+          }
+        }
+          ]
+        },
+    {
+      "name": "[parameters('dockerswarmstorageaccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('dockerswarmstorageaccountType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "dockerswarmstorageaccount"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[parameters('swarmmanager1NicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('swarmmanagerpublicIPName'))]"
+      ],
+      "tags": {
+        "displayName": "swarmmanager1Nic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[parameters('swarmmanager1SubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('swarmmanagerpublicIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+
+    {
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        
+      ],
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('swarmmanagerpublicIPName')]",
+
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('swarmmanagerpublicIPDnsName')]"
+        }
+      },
+      "tags": {
+        "displayName": "swarmmanagerpublicIP"
+      },
+      "type": "Microsoft.Network/publicIPAddresses"
+    }
+  ],
+  "parameters": {
+    "swarmmanager1Name": { "type": "string" },
+    "swarmmanager1VmSize": { "type": "string" },
+    "adminUsername": { "type": "string" },
+    "adminPassword": { "type": "securestring" },
+    "dockerswarmstorageaccountName": { "type": "string" },
+    "dockerswarmstorageaccountType": { "type": "string" },
+    "swarmmanager1NicName": { "type": "string" },
+    "swarmmanagerpublicIPName": { "type": "string" },
+    "swarmmanager1SubnetRef": { "type": "string" },
+    "swarmmanager1ImagePublisher": { "type": "string" },
+    "swarmmanager1ImageOffer": { "type": "string" },
+    "windowsOSVersion": { "type": "string" },
+    "swarmmanager1StorageAccountContainerName": { "type": "string" },
+    "swarmmanager1OSDiskName": { "type": "string" },
+    "swarmmanagerpublicIPDnsName": { "type": "string" },
+    "DSCConfigurationURL": { "type": "string" },
+    "DSCExtensionManagerTagVersion": { "type": "string" },
+    "RegistrationKey": { "type": "securestring" },
+    "RegistrationUrl": { "type": "string" },
+    "LicenseType": {"type": "string"}
+
+  },
+  "outputs": {
+    "returnedIPAddress": {
+      "type": "string",
+      "value": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
+    }
+
+  }
+}
+      
+    

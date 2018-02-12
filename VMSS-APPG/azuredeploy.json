@@ -1,0 +1,654 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01-preview/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmSku": {
+      "type": "string",
+      "defaultValue": "Standard_A1",
+      "metadata": {
+        "description": "Size of VMs in the VM Scale Set."
+      }
+    },
+    "windowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter-with-Containers",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Datacenter-with-Containers"
+      ],
+      "metadata": {
+        "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version. Allowed values: 2008-R2-SP1, 2012-Datacenter, 2012-R2-Datacenter."
+      }
+    },
+    "registrationKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Registration key to use to onboard to the Azure Automation DSC pull/reporting server"
+      }
+    },
+    "registrationUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "Registration url of the Azure Automation DSC pull/reporting server"
+      }
+    },
+    "DSCExtensionTagVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "Change this to redeploy DSC"
+      }
+    },
+    "nodeConfigurationName": {
+      "type": "string",
+      "defaultValue": "MyService.webServer",
+      "metadata": {
+        "description": "The name of the node configuration, on the Azure Automation DSC pull server, that this node will be configured as"
+      }
+    },
+    "configurationMode": {
+      "type": "string",
+      "defaultValue": "ApplyAndAutoCorrect",
+      "allowedValues": [
+        "ApplyOnly",
+        "ApplyAndMonitor",
+        "ApplyAndAutoCorrect"
+      ],
+      "metadata": {
+        "description": "DSC agent (LCM) configuration mode setting. ApplyOnly, ApplyAndMonitor, or ApplyAndAutoCorrect"
+      }
+    },
+    "configurationModeFrequencyMins": {
+      "type": "int",
+      "defaultValue": 15,
+      "metadata": {
+        "description": "DSC agent (LCM) configuration mode frequency setting, in minutes"
+      }
+    },
+    "refreshFrequencyMins": {
+      "type": "int",
+      "defaultValue": 30,
+      "metadata": {
+        "description": "DSC agent (LCM) refresh frequency setting, in minutes"
+      }
+    },
+    "rebootNodeIfNeeded": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "DSC agent (LCM) rebootNodeIfNeeded setting"
+      }
+    },
+    "actionAfterReboot": {
+      "type": "string",
+      "defaultValue": "ContinueConfiguration",
+      "allowedValues": [
+        "ContinueConfiguration",
+        "StopConfiguration"
+      ],
+      "metadata": {
+        "description": "DSC agent (LCM) actionAfterReboot setting. ContinueConfiguration or StopConfiguration"
+      }
+    },
+    "allowModuleOverwrite": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "DSC agent (LCM) allowModuleOverwrite setting"
+      }
+    },
+    "automationAccountName": {
+      "type": "string",
+      "defaultValue": "myAutomationAccount",
+      "metadata": {
+        "description": "The name of the Automation account to use.  Check the SKU and tags to make sure they match the existing account."
+      }
+    },
+    "automationRegionId": {
+      "type": "string",
+      "defaultValue": "East US 2",
+      "allowedValues": [
+        "Japan East",
+        "East US 2",
+        "West Europe",
+        "Southeast Asia",
+        "South Central US",
+        "Central India"
+      ],
+      "metadata": {
+        "description": "The region the Automation account is located in."
+      }
+    },
+    "vmssName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-57 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "maxLength": 57
+    },
+    "instanceCount": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of VM instances (100 or less)."
+      },
+      "maxValue": 100
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username on all VMs."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password on all VMs."
+      }
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    },
+    "dockerswarmstorageaccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "swarmmanager1Name": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "swarmmanager1"
+    },
+    "swarmmanagerpublicIPDnsName": {
+      "type": "string",
+      "defaultValue": "[uniqueString(subscription().subscriptionId)]",
+      "minLength": 1
+    }
+  },
+  "variables": {
+    "namingInfix": "[toLower(substring(concat(parameters('vmssName'), uniqueString(resourceGroup().id)), 0, 9))]",
+    "longNamingInfix": "[toLower(parameters('vmssName'))]",
+    "addressPrefix": "10.0.0.0/16",
+    "subnetPrefix": "10.0.8.0/21",
+    "virtualNetworkName": "[concat(variables('namingInfix'), 'vnet')]",
+    "natPoolName": "[concat(variables('namingInfix'), 'natpool')]",
+    "publicIPAddressName": "[concat(variables('namingInfix'), 'pip')]",
+    "subnetName": "[concat(variables('namingInfix'), 'subnet')]",
+    "nicName": "[concat(variables('namingInfix'), 'nic')]",
+    "ipConfigName": "[concat(variables('namingInfix'), 'ipconfig')]",
+    "imageReference": {
+      "publisher": "MicrosoftWindowsServer",
+      "offer": "WindowsServer",
+      "sku": "[parameters('windowsOSVersion')]",
+      "version": "latest"
+    },
+    "virtualNetworkID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "appGwPublicIPAddressName": "[concat(variables('namingInfix'), 'appGwPip')]",
+    "bePoolName": "[concat(variables('namingInfix'), 'bepool')]",
+    "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
+    "appGwName": "[concat(variables('namingInfix'), 'appGw')]",
+    "loadBalancerName": "[concat(variables('namingInfix'), 'lb')]",
+    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+    "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('loadBalancerName'))]",
+    "appGwPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appGwPublicIPAddressName'))]",
+    "appGwID": "[resourceId('Microsoft.Network/applicationGateways',variables('appGwName'))]",
+    "appGwSubnetName": "[concat(variables('namingInfix'),'appGwSubnet')]",
+    "appGwSubnetPrefix": "10.0.1.0/24",
+    "appGwSubnetID": "[concat(variables('virtualNetworkID'),'/subnets/',variables('appGwSubnetName'))]",
+    "appGwFrontendPort": 80,
+    "appGwBackendPort": 80,
+    "appGwBePoolName": "[concat(variables('namingInfix'), 'appGwBepool')]",
+    "computeApiVersion": "2016-04-30-preview",
+    "networkApiVersion": "2016-03-30",
+    "natStartPort": 50000,
+    "natEndPort": 50119,
+    "natBackendPort": 3389,
+    "DSCArchiveFolder": "DSC",
+    "DSCArchiveFileName": "DSC.zip",
+    "dockerswarmstorageaccountName": "[concat('sa', uniqueString(resourceGroup().id))]",
+    "swarmmanager1ImagePublisher": "MicrosoftWindowsServer",
+    "swarmmanager1ImageOffer": "WindowsServer",
+    "swarmmanager1OSDiskName": "swarmmanager1OSDisk",
+    "swarmmanager1VmSize": "Standard_D2_v2",
+    "swarmmanager1VnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "swarmmanager1SubnetRef": "[concat(variables('swarmmanager1VnetID'), '/subnets/', variables('subnetName'))]",
+    "swarmmanager1StorageAccountContainerName": "vhds",
+    "swarmmanager1NicName": "[concat(parameters('swarmmanager1Name'), 'NetworkInterface')]",
+    "swarmmanagerpublicIPName": "swarmmanagerpublicIP",
+    "swarmmanagerdeploymentTemplateFolder": "nestedtemplates",
+    "swarmmanagerdeploymentTemplateFileName": "swarmmanagerdeployment.json",
+    "swarmmanagerdeploymentTemplateParametersFileName": "swarmmanagerdeployment.parameters.json"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('networkApiVersion')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          },
+          {
+            "name": "[variables('appGwSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('appGwSubnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[variables('loadBalancerName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2017-04-01",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontEnd",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[variables('publicIPAddressID')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('bePoolName')]"
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "[variables('natPoolName')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": "[variables('natStartPort')]",
+              "frontendPortRangeEnd": "[variables('natEndPort')]",
+              "backendPort": "[variables('natBackendPort')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('appGwPublicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('networkApiVersion')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+
+        "dnsSettings": {
+          "domainNameLabel": "appgwvip"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('publicIPAddressName')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+
+        "dnsSettings": {
+          "domainNameLabel": "rdpvip"
+        }
+      },
+      "type": "Microsoft.Network/publicIPAddresses"
+    },
+    {
+      "type": "Microsoft.Network/applicationGateways",
+      "name": "[variables('appGwName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('networkApiVersion')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('appGwPublicIPAddressName'))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "Standard_Small",
+          "tier": "Standard",
+          "capacity": "1"
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appGwIpConfig",
+            "properties": {
+              "subnet": {
+                "id": "[variables('appGwSubnetID')]"
+              }
+            }
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "appGwFrontendIP",
+            "properties": {
+              "PublicIPAddress": {
+                "id": "[variables('appGwPublicIPAddressID')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "appGwFrontendPort",
+            "properties": {
+              "Port": "[variables('appGwFrontendPort')]"
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('appGwBePoolName')]"
+          }
+        ],
+        "backendHttpSettingsCollection": [
+          {
+            "name": "appGwBackendHttpSettings",
+            "properties": {
+              "Port": "[variables('appGwBackendPort')]",
+              "Protocol": "Http",
+              "CookieBasedAffinity": "Disabled"
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "appGwHttpListener",
+            "properties": {
+              "FrontendIPConfiguration": {
+                "Id": "[concat(variables('appGwID'), '/frontendIPConfigurations/appGwFrontendIP')]"
+              },
+              "FrontendPort": {
+                "Id": "[concat(variables('appGwID'), '/frontendPorts/appGwFrontendPort')]"
+              },
+              "Protocol": "Http",
+              "SslCertificate": null
+            }
+          }
+        ],
+        "requestRoutingRules": [
+          {
+            "Name": "rule1",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('appGwID'), '/httpListeners/appGwHttpListener')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('appGwID'), '/backendAddressPools/', variables('appGwBePoolName'))]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('appGwID'), '/backendHttpSettingsCollection/appGwBackendHttpSettings')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('namingInfix')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('computeApiVersion')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[concat('Microsoft.Network/applicationGateways/', variables('appGwName'))]",
+        "[concat('Microsoft.Network/loadBalancers/', variables('loadBalancerName'))]"
+      ],
+      "sku": {
+        "name": "[parameters('vmSku')]",
+        "tier": "Standard",
+        "capacity": "[parameters('instanceCount')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "singlePlacementGroup": "true",
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "caching": "ReadWrite",
+              "createOption": "FromImage"
+            },
+            "dataDisks": [],
+            "imageReference": "[variables('imageReference')]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('namingInfix')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('nicName')]",
+                "properties": {
+                  "primary": "true",
+                  "ipConfigurations": [
+                    {
+                      "name": "[variables('ipConfigName')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('subnetName'))]"
+                        },
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('loadBalancerName'), '/backendAddressPools/', variables('bePoolName'))]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('loadBalancerName'), '/inboundNatPools/', variables('natPoolName'))]"
+                          }
+                        ],
+                        "ApplicationGatewayBackendAddressPools": [
+                          {
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/applicationGateways/', variables('appGwName'), '/backendAddressPools/', variables('appGwBePoolName'))]"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "Microsoft.Powershell.DSC",
+                "properties": {
+                  "autoUpgradeMinorVersion": true,
+                  "publisher": "Microsoft.Powershell",
+                  "forceUpdateTag": "[parameters('DSCExtensionTagVersion')]",
+                  "settings": {
+                    "configuration": {
+                      "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'), parameters('_artifactsLocationSasToken'))]",
+                      "script": "DSC.ps1",
+                      "function": "Main"
+                    },
+                    "configurationArguments": {
+                      "RegistrationKey": "[parameters('registrationKey')]",
+                      "RegistrationUrl": "[parameters('registrationUrl')]",
+                      "NodeConfigurationName": "[parameters('nodeConfigurationName')]",
+                      "ConfigurationMode": "[parameters('configurationMode')]",
+                      "ConfigurationModeFrequencyMins": "[parameters('configurationModeFrequencyMins')]",
+                      "RefreshFrequencyMins": "[parameters('refreshFrequencyMins')]",
+                      "RebootNodeIfNeeded": "[parameters('rebootNodeIfNeeded')]",
+                      "ActionAfterReboot": "[parameters('actionAfterReboot')]",
+                      "AllowModuleOverwrite": "[parameters('allowModuleOverwrite')]"
+                    }
+                  },
+                  "type": "DSC",
+                  "typeHandlerVersion": "2.26"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "swarmmanager",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "name": "[parameters('swarmmanager1Name')]",
+              "type": "Microsoft.Compute/virtualMachines",
+              "location": "[resourceGroup().location]",
+              "apiVersion": "2015-06-15",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('dockerswarmstorageaccountName'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('swarmmanager1NicName'))]"
+              ],
+              "tags": {
+                "displayName": "swarmmanager1"
+              },
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[variables('swarmmanager1VmSize')]"
+                },
+                "osProfile": {
+                  "computerName": "[parameters('swarmmanager1Name')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "[variables('swarmmanager1ImagePublisher')]",
+                    "offer": "[variables('swarmmanager1ImageOffer')]",
+                    "sku": "[parameters('windowsOSVersion')]",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "name": "swarmmanager1OSDisk",
+                    "vhd": {
+                      "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('dockerswarmstorageaccountName')), '2016-01-01').primaryEndpoints.blob, variables('swarmmanager1StorageAccountContainerName'), '/', variables('swarmmanager1OSDiskName'), '.vhd')]"
+                    },
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('swarmmanager1NicName'))]"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "[variables('dockerswarmstorageaccountName')]",
+              "type": "Microsoft.Storage/storageAccounts",
+              "location": "[resourceGroup().location]",
+              "apiVersion": "2016-01-01",
+              "sku": {
+                "name": "[parameters('dockerswarmstorageaccountType')]"
+              },
+              "dependsOn": [],
+              "tags": {
+                "displayName": "dockerswarmstorageaccount"
+              },
+              "kind": "Storage"
+            },
+            {
+              "name": "[variables('swarmmanager1NicName')]",
+              "type": "Microsoft.Network/networkInterfaces",
+              "location": "[resourceGroup().location]",
+              "apiVersion": "2016-03-30",
+              "tags": {
+                "displayName": "swarmmanager1Nic"
+              },
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[variables('swarmmanager1SubnetRef')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('swarmmanagerpublicIPName'))]"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "[variables('swarmmanagerpublicIPName')]",
+              "type": "Microsoft.Network/publicIPAddresses",
+              "location": "[resourceGroup().location]",
+              "apiVersion": "2016-03-30",
+              "dependsOn": [],
+              "tags": {
+                "displayName": "swarmmanagerpublicIP"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                  "domainNameLabel": "[parameters('swarmmanagerpublicIPDnsName')]"
+                }
+              }
+            },
+            {
+              "outputs": {
+                "returnedIPAddress": {
+                  "type": "string",
+                  "value": "[reference(variables('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+    
+  ]
+}
