@@ -50,33 +50,97 @@
           "name": "Microsoft.Powershell.DSC",
           "type": "extensions",
           "location": "[resourceGroup().location]",
-          "apiVersion": "2015-06-15",
+          "apiVersion": "2016-03-30",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]",
+            "OnboadAzureAutomation"
           ],
           "tags": {
             "displayName": "DSC"
           },
           "properties": {
             "publisher": "Microsoft.Powershell",
-            "typeHandlerVersion": "2.26",
-            "type":  "DSC",
+            "typeHandlerVersion": "2.9",
+            "type": "DSC",
             "autoUpgradeMinorVersion": true,
-            "forceUpdateTag": "[parameters('DSCExtensionManagerTagVersion')]",
+            "forceUpdateTag": "5",
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+              
+            },
             "settings": {
+              "configuration": {
+                        "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
+                        "script": "DSC.ps1",
+                        "function": "SwarmManager"
+              },
               "wmfVersion": "latest",
               "configurationArguments": {
-                "RegistrationKey": {
-                  "UserName": "PLACEHOLDER_DONOTUSE",
-                  "Password": "[parameters('RegistrationKey')]"
-                },
-                "RegistrationUrl": "[parameters('registrationUrl')]",
-                "NodeConfigurationName": "SwarmManager.localhost",
-                "RebootNodeIfNeeded": true
+                "CustomData": "hello from ARM"
               }
             }
+
           }
-        }
+        },
+        {
+          "name": "OnboadAzureAutomation",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
+          ],
+          "tags": {
+            "displayName": "OnboadAzureAutomation"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'), '/', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), parameters('_artifactsLocationSasToken'))]"
+              ]
+            
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), ' -RegistrationKey ', parameters('RegistrationKey'), ' -RegistrationUrl ', parameters('RegistrationUrl'))]"
+            }
+
+          }
+        },
+        //{
+        //  "name": "Microsoft.Powershell.DSC",
+        //  "type": "extensions",
+        //  "location": "[resourceGroup().location]",
+        //  "apiVersion": "2016-03-30",
+        //  "dependsOn": [
+        //    "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
+        //  ],
+        //  "tags": {
+        //    "displayName": "DSC"
+        //  },
+        //  "properties": {
+        //    "publisher": "Microsoft.Powershell",
+        //    "type": "DSC",
+        //    "typeHandlerVersion": "2.9",
+        //    "autoUpgradeMinorVersion": true,
+        //    "settings": {
+        //      "configuration": {
+        //        "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
+        //        "script": "DSC.ps1",
+        //        "function": "Main"
+        //      },
+        //      "configurationArguments": {
+        //        "nodeName": "[parameters('swarmmanager1Name')]"
+        //      }
+        //    },
+        //    "protectedSettings": {
+        //      "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+        //    }
+        //  }
+        //}
           ]
         },
     {
@@ -159,11 +223,23 @@
     "swarmmanager1StorageAccountContainerName": { "type": "string" },
     "swarmmanager1OSDiskName": { "type": "string" },
     "swarmmanagerpublicIPDnsName": { "type": "string" },
-    "DSCConfigurationURL": { "type": "string" },
-    "DSCExtensionManagerTagVersion": { "type": "string" },
+    //"DSCConfigurationURL": { "type": "string" },
+    //"DSCExtensionManagerTagVersion": { "type": "string" },
     "RegistrationKey": { "type": "securestring" },
     "RegistrationUrl": { "type": "string" },
-    "LicenseType": {"type": "string"}
+    "LicenseType": {"type": "string"},
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    }
 
   },
   "outputs": {
@@ -172,6 +248,12 @@
       "value": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
     }
 
+  },
+  "variables": {
+    "OnboadAzureAutomationScriptFolder": "CustomScripts",
+    "OnboadAzureAutomationScriptFileName": "OnboadAzureAutomation.ps1",
+    "DSCArchiveFolder": "DSC",
+    "DSCArchiveFileName": "DSC.zip"
   }
 }
       

@@ -27,12 +27,14 @@
   <ItemGroup>
     <Content Include="azuredeploy.parameters.json" />
     <Content Include="azuredeploy.json" />
+    <Content Include="CustomScripts\OnboadAzureAutomation.ps1" />
     <None Include="Deployment.targets">
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
     <Content Include="swarmhost.ps1" />
     <Content Include="nestedtemplates\swarmmanagerdeployment.json" />
+    <Content Include="DSC\DSC.ps1" />
     <None Include="swarmmanager.ps1" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />

@@ -34,44 +34,10 @@
         "description": "Registration url of the Azure Automation DSC pull/reporting server"
       }
     },
-    "DSCExtensionTagVersion": {
-      "type": "string",
-      "metadata": {
-        "description": "Change this to redeploy DSC"
-      }
-    },
     "LicenseType": {
       "type": "string",
       "metadata": { "descrition": "Use hybrid benefit for Windows OS" },
       "defaultValue" :  ""
-    },
-    "DSCExtensionManagerTagVersion": {
-      "type": "string",
-      "metadata": {
-        "description": "Change this to redeploy DSC"
-      }
-    },
-    "automationAccountName": {
-      "type": "string",
-      "defaultValue": "myAutomationAccount",
-      "metadata": {
-        "description": "The name of the Automation account to use.  Check the SKU and tags to make sure they match the existing account."
-      }
-    },
-    "automationRegionId": {
-      "type": "string",
-      "defaultValue": "East US 2",
-      "allowedValues": [
-        "Japan East",
-        "East US 2",
-        "West Europe",
-        "Southeast Asia",
-        "South Central US",
-        "Central India"
-      ],
-      "metadata": {
-        "description": "The region the Automation account is located in."
-      }
     },
     "vmssName": {
       "type": "string",
@@ -126,11 +92,6 @@
       "type": "string",
       "minLength": 1,
       "defaultValue": "swarmmanager1"
-    },
-    "swarmmanagerpublicIPDnsName": {
-      "type": "string",
-      "defaultValue": "[uniqueString(resourceGroup().id)]",
-      "minLength": 1
     }
   },
   "variables": {
@@ -150,6 +111,8 @@
       "sku": "[parameters('windowsOSVersion')]",
       "version": "latest"
     },
+    "DSCArchiveFolder": "DSC",
+    "DSCArchiveFileName": "DSC.zip",
     "DSCConfigurationURL": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'), parameters('_artifactsLocationSasToken'))]",
     "virtualNetworkID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "appGwPublicIPAddressName": "[concat(variables('namingInfix'), 'appGwPip')]",
@@ -172,21 +135,18 @@
     "natStartPort": 50000,
     "natEndPort": 50119,
     "natBackendPort": 3389,
-    "DSCArchiveFolder": "DSC",
-    "DSCArchiveFileName": "DSC.zip",
     "dockerswarmstorageaccountName": "[concat('sa', uniqueString(resourceGroup().id))]",
     "swarmmanager1ImagePublisher": "MicrosoftWindowsServer",
     "swarmmanager1ImageOffer": "WindowsServer",
-    "swarmmanager1OSDiskName": "swarmmanager1OSDisk",
+    "swarmmanager1OSDiskName": "[concat('swarmmanager1OSDisk', uniqueString(resourceGroup().id))]",
     "swarmmanager1VmSize": "Standard_D2_v2",
     "swarmmanager1VnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
     "swarmmanager1SubnetRef": "[concat(variables('swarmmanager1VnetID'), '/subnets/', variables('subnetName'))]",
     "swarmmanager1StorageAccountContainerName": "vhds",
     "swarmmanager1NicName": "[concat(parameters('swarmmanager1Name'), 'NetworkInterface')]",
-    "swarmmanagerpublicIPName": "[parameters('swarmmanagerpublicIPDnsName')]",
+    "swarmmanagerpublicIPName": "[uniqueString(resourceGroup().id)]",
     "swarmmanagerdeploymentTemplateFolder": "nestedtemplates",
-    "swarmmanagerdeploymentTemplateFileName": "swarmmanagerdeployment.json",
-    "swarmmanagerdeploymentTemplateParametersFileName": "swarmmanagerdeployment.parameters.json"
+    "swarmmanagerdeploymentTemplateFileName": "swarmmanagerdeployment.json"
   },
   "resources": [
     {
@@ -454,13 +414,8 @@
                   "typeHandlerVersion": "2.72",
                   "type": "DSC",
                   "publisher": "Microsoft.Powershell",
-                  "forceUpdateTag": "[parameters('DSCExtensionTagVersion')]",
+                  //"forceUpdateTag": "[parameters('DSCExtensionTagVersion')]",
                   "settings": {
-                  //  "configuration": {
-                  //    "url": "[variables('DSCConfigurationURL')]",
-                  //    "script": "DSC.ps1",
-                  //    "function": "Main"
-                  //  },
                     "configurationArguments": {
                       "RegistrationKey": {
                         "UserName": "PLACEHOLDER_DONOTUSE",
@@ -469,13 +424,7 @@
                       "RegistrationUrl": "[parameters('registrationUrl')]",
                       "NodeConfigurationName": "SwarmHost.localhost",
                       "RebootNodeIfNeeded": true,
-                      //"SwarmManagerIP": "[reference('swarmmanagerdeployment').outputs.returnedIPAddress.value]",
-                      //"ConfigurationMode": "ApplyAndAutoCorrect",
-                      //"ConfigurationModeFrequencyMins": 15,
-                      //"RefreshFrequencyMins": 30,
-
-                      //"ActionAfterReboot": "ContinueConfiguration",
-                      //"AllowModuleOverwrite": false
+                      "ConfigurationMode": "ApplyAndAutoCorrect"
                     }
                   }
                 }
@@ -485,12 +434,12 @@
         }
       }
     },
- 
-        {
-      "name": "swarmmanagerdeployment",
+
+    {
+      "name": "[concat('swarmmanagerdeployment-', uniquestring(deployment().name))]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-09-01",
-      "dependsOn": [ ],
+      "dependsOn": [],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -509,21 +458,20 @@
           "swarmmanager1SubnetRef": { "value": "[variables('swarmmanager1SubnetRef')]" },
           "swarmmanager1ImagePublisher": { "value": "[variables('swarmmanager1ImagePublisher')]" },
           "swarmmanager1ImageOffer": { "value": "[variables('swarmmanager1ImageOffer')]" },
+          //"DSCConfigurationURL": { "value": "[variables('DSCConfigurationURL')]" },
           "windowsOSVersion": { "value": "[parameters('windowsOSVersion')]" },
           "swarmmanager1StorageAccountContainerName": { "value": "[variables('swarmmanager1StorageAccountContainerName')]" },
           "swarmmanager1OSDiskName": { "value": "[variables('swarmmanager1OSDiskName')]" },
-          "swarmmanagerpublicIPDnsName": { "value": "[parameters('swarmmanagerpublicIPDnsName')]" },
-          "DSCConfigurationURL": { "value": "[variables('DSCConfigurationURL')]" },
-          "DSCExtensionManagerTagVersion": { "value": "[parameters('DSCExtensionManagerTagVersion')]" },
-          "RegistrationKey": { "value":"[parameters('registrationKey')]" },
+          "swarmmanagerpublicIPDnsName": { "value": "[variables('swarmmanagerpublicIPName')]" },
+          "RegistrationKey": { "value": "[parameters('registrationKey')]" },
           "RegistrationUrl": { "value": "[parameters('registrationUrl')]" },
-          "LicenseType": {"value":  "[parameters('LicenseType')]"}
+          "LicenseType": { "value": "[parameters('LicenseType')]" },
+          "_artifactsLocationSasToken": { "value": "[parameters('_artifactsLocationSasToken')]" },
+          "_artifactsLocation": { "value": "[parameters('_artifactsLocation')]" }
+
         }
 
-        //"parametersLink": {
-        //  "uri": "[concat(parameters('_artifactsLocation'), '/', variables('swarmmanagerdeploymentTemplateFolder'), '/', variables('swarmmanagerdeploymentTemplateParametersFileName'), parameters('_artifactsLocationSasToken'))]",
-        //  "contentVersion": "1.0.0.0"
-        //}
+       
       }
     }
   ]

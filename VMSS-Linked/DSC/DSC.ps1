@@ -1,6 +1,3 @@
-#
-# swarmmanager.ps1
-#
 Configuration SwarmManager
 {
     # Parameter help description
@@ -12,7 +9,7 @@ Configuration SwarmManager
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-    Import-DscResource -ModuleName PackageManagement -ModuleVersion "1.1.7.0"
+    # Import-DscResource -ModuleName PackageManagement -ModuleVersion "1.1.7.0"
     Import-DscResource -ModuleName cChoco
     Import-DSCResource -moduleName cDSCDockerSwarm
     Import-DscResource -ModuleName cAzureKeyVault 
@@ -20,12 +17,12 @@ Configuration SwarmManager
     Node localhost
     {
  
-        PackageManagement xPSDesiredStateConfiguration {
-            Ensure = 'present'
-            Name   = "xPSDesiredStateConfiguration"
-            Source = "PSGallery"
+        #PackageManagement xPSDesiredStateConfiguration {
+        #    Ensure = 'present'
+        #    Name   = "xPSDesiredStateConfiguration"
+        #    Source = "PSGallery"
        
-        } 
+        #} 
         cDockerConfig DaemonJson {
             Ensure          = 'Present'
             RestartOnChange = $false

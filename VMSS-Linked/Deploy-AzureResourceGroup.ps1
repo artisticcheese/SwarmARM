@@ -49,8 +49,9 @@ if ($UploadArtifacts) {
     if (Test-Path $DSCSourceFolder) {
         $DSCSourceFilePaths = @(Get-ChildItem $DSCSourceFolder -File -Filter '*.ps1' | ForEach-Object -Process {$_.FullName})
         foreach ($DSCSourceFilePath in $DSCSourceFilePaths) {
+			Write-Output "DSCSourceFilepath is $DSCSourceFilePath"
             $DSCArchiveFilePath = $DSCSourceFilePath.Substring(0, $DSCSourceFilePath.Length - 4) + '.zip'
-            Publish-AzureRmVMDscConfiguration $DSCSourceFilePath -OutputArchivePath $DSCArchiveFilePath -Force -Verbose 
+            Publish-AzureRmVMDscConfiguration $DSCSourceFilePath -OutputArchivePath $DSCArchiveFilePath -Force -Verbose -SkipDependencyDetection
         }
     }
 
@@ -78,13 +79,14 @@ if ($UploadArtifacts) {
 
     $ArtifactFilePaths = Get-ChildItem $ArtifactStagingDirectory -Recurse -File | ForEach-Object -Process {$_.FullName}
     foreach ($SourcePath in $ArtifactFilePaths) {
+		Write-Output "Copying $SourcePath to $($SourcePath.Substring($ArtifactStagingDirectory.length + 1))"
         Set-AzureStorageBlobContent -File $SourcePath -Blob $SourcePath.Substring($ArtifactStagingDirectory.length + 1) `
             -Container $StorageContainerName -Context $StorageAccount.Context -Force
     }
 
     # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file
     if ($OptionalParameters[$ArtifactsLocationSasTokenName] -eq $null) {
-		$OptionalParameters[$ArtifactsLocationSasTokenName] = New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddYears(10) -Verbose
+		$OptionalParameters[$ArtifactsLocationSasTokenName] = New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddYears(10) -Verbose -StartTime (Get-Date).AddDays(-1)
 		$OptionalParameters[$ArtifactsLocationSasTokenName] = ConvertTo-SecureString $OptionalParameters[$ArtifactsLocationSasTokenName] -AsPlainText -Force -Verbose
     }
 }
@@ -106,8 +108,7 @@ if ($ValidateOnly) {
     }
 }
 else {
-	
-	Write-Output  "decrypted parameter being submitted" + ([System.Runtime.InteropServices.marshal]::PtrToStringAuto([System.Runtime.InteropServices.marshal]::SecureStringToBSTR($OptionalParameters["_artifactsLocationSasToken"])))
+
 	
     New-AzureRmResourceGroupDeployment -Name ((Get-ChildItem $TemplateFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
                                        -ResourceGroupName $ResourceGroupName `

@@ -22,9 +22,6 @@
     "registrationUrl": {
       "value": "https://scus-agentservice-prod-1.azure-automation.net/accounts/6d27e7a4-df4b-403c-b80b-8e977b7063c4"
     },
-    "automationAccountName": {
-      "value": "AutomationAccount"
-    },
     "registrationKey": {
       "reference": {
         "keyVault": {
@@ -35,12 +32,6 @@
     },
     "vmSku": {
       "value": "Standard_D2"
-    },
-    "DSCExtensionTagVersion": {
-      "value": "2"
-    },
-    "DSCExtensionManagerTagVersion": {
-      "value": "2"
     },
     "LicenseType": {
       "value": "Windows_Server"
