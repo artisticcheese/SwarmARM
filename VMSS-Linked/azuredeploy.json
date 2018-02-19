@@ -28,6 +28,25 @@
         "description": "Registration key to use to onboard to the Azure Automation DSC pull/reporting server"
       }
     },
+    "privateKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Private Key for server certificate for Docker swarm"
+      }
+    },
+    "serverCert": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Server certificate for for Docker swarm"
+      }
+    },
+    "CACert": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Certificate authority for Server certificate for for Docker swarm"
+      }
+    },
+
     "registrationUrl": {
       "type": "string",
       "metadata": {
@@ -37,7 +56,7 @@
     "LicenseType": {
       "type": "string",
       "metadata": { "descrition": "Use hybrid benefit for Windows OS" },
-      "defaultValue" :  ""
+      "defaultValue": ""
     },
     "vmssName": {
       "type": "string",
@@ -458,7 +477,6 @@
           "swarmmanager1SubnetRef": { "value": "[variables('swarmmanager1SubnetRef')]" },
           "swarmmanager1ImagePublisher": { "value": "[variables('swarmmanager1ImagePublisher')]" },
           "swarmmanager1ImageOffer": { "value": "[variables('swarmmanager1ImageOffer')]" },
-          //"DSCConfigurationURL": { "value": "[variables('DSCConfigurationURL')]" },
           "windowsOSVersion": { "value": "[parameters('windowsOSVersion')]" },
           "swarmmanager1StorageAccountContainerName": { "value": "[variables('swarmmanager1StorageAccountContainerName')]" },
           "swarmmanager1OSDiskName": { "value": "[variables('swarmmanager1OSDiskName')]" },
@@ -467,12 +485,16 @@
           "RegistrationUrl": { "value": "[parameters('registrationUrl')]" },
           "LicenseType": { "value": "[parameters('LicenseType')]" },
           "_artifactsLocationSasToken": { "value": "[parameters('_artifactsLocationSasToken')]" },
-          "_artifactsLocation": { "value": "[parameters('_artifactsLocation')]" }
+          "_artifactsLocation": { "value": "[parameters('_artifactsLocation')]" },
+          "privateKey": {"value" :  "[parameters('privateKey')]"},
+          "serverCert": { "value": "[parameters('serverCert')]" },
+          "CACert": {"value": "[parameters('CACert')]"}
+            
+          }
+          }
+
 
         }
-
-       
-      }
-    }
+    
   ]
 }

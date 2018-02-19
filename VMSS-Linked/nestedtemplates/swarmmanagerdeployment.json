@@ -65,8 +65,14 @@
             "autoUpgradeMinorVersion": true,
             "forceUpdateTag": "5",
             "protectedSettings": {
-              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
-              
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+              "configurationArguments": {
+                "privateKey": "[parameters('privatekey')]",
+                
+                "serverCert": "[parameters('serverCert')]",
+                "CACert": "[parameters('CACert')]"
+
+              }
             },
             "settings": {
               "configuration": {
@@ -76,7 +82,9 @@
               },
               "wmfVersion": "latest",
               "configurationArguments": {
-                "CustomData": "hello from ARM"
+                "CustomData": "hello from ARM",
+                "SwarmManagerURI": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
+
               }
             }
 
@@ -109,38 +117,7 @@
             }
 
           }
-        },
-        //{
-        //  "name": "Microsoft.Powershell.DSC",
-        //  "type": "extensions",
-        //  "location": "[resourceGroup().location]",
-        //  "apiVersion": "2016-03-30",
-        //  "dependsOn": [
-        //    "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
-        //  ],
-        //  "tags": {
-        //    "displayName": "DSC"
-        //  },
-        //  "properties": {
-        //    "publisher": "Microsoft.Powershell",
-        //    "type": "DSC",
-        //    "typeHandlerVersion": "2.9",
-        //    "autoUpgradeMinorVersion": true,
-        //    "settings": {
-        //      "configuration": {
-        //        "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
-        //        "script": "DSC.ps1",
-        //        "function": "Main"
-        //      },
-        //      "configurationArguments": {
-        //        "nodeName": "[parameters('swarmmanager1Name')]"
-        //      }
-        //    },
-        //    "protectedSettings": {
-        //      "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
-        //    }
-        //  }
-        //}
+        }
           ]
         },
     {
@@ -212,6 +189,9 @@
     "swarmmanager1VmSize": { "type": "string" },
     "adminUsername": { "type": "string" },
     "adminPassword": { "type": "securestring" },
+    "privateKey": { "type": "securestring" },
+    "serverCert": { "type": "securestring" },
+    "CACert": { "type": "securestring" },
     "dockerswarmstorageaccountName": { "type": "string" },
     "dockerswarmstorageaccountType": { "type": "string" },
     "swarmmanager1NicName": { "type": "string" },
@@ -223,11 +203,9 @@
     "swarmmanager1StorageAccountContainerName": { "type": "string" },
     "swarmmanager1OSDiskName": { "type": "string" },
     "swarmmanagerpublicIPDnsName": { "type": "string" },
-    //"DSCConfigurationURL": { "type": "string" },
-    //"DSCExtensionManagerTagVersion": { "type": "string" },
     "RegistrationKey": { "type": "securestring" },
     "RegistrationUrl": { "type": "string" },
-    "LicenseType": {"type": "string"},
+    "LicenseType": { "type": "string" },
     "_artifactsLocation": {
       "type": "string",
       "metadata": {
