@@ -6,14 +6,13 @@ Configuration SwarmManager
 		[string] $privateKey,
 		[string] $serverCert,
 		[string] $CAcert,
-		[string] $SwarmManagerURI,
-[string] $CustomData
+		[string] $SwarmManagerURI
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cChoco
     Import-DSCResource -moduleName cDSCDockerSwarm
-    Import-DscResource -ModuleName cAzureKeyVault 
+
 
     Node localhost
     {
@@ -68,10 +67,6 @@ Configuration SwarmManager
 			Destinationpath = "$($env:programdata)\docker\certs.d\ca.cer"
 			Contents = $CAcert
 			Force = $true
-		}
-		File DumpParameters {
-			Destinationpath = "c:\out.txt"
-			Contents = "Hello $CustomData"
 		}
     }
 }

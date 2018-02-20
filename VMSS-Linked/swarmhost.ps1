@@ -1,29 +1,37 @@
 Configuration SwarmHost
 {
 
+	    param
+    (
+		[string] $SwarmManagerURI
+    )
+
 
 Import-DscResource -ModuleName PSDesiredStateConfiguration
-Import-DscResource -ModuleName PackageManagement -ModuleVersion 1.1.6.0
+
 Import-DscResource -ModuleName cChoco
 Import-DSCResource -moduleName cDSCDockerSwarm
 
 Node localhost
   {
  
-	  PackageManagement xPSDesiredStateConfiguration {
-            Ensure = 'present'
-            Name = "xPSDesiredStateConfiguration"
-            Source = "PSGallery"
-       
-        } 
+
+	  		cDockerSwarm Swarm {
+    DependsOn = '[cDockerConfig]DaemonJson'
+    SwarmMasterURI = "$($SwarmManagerURI):2377"
+    SwarmMode = 'Active'
+    ManagerCount = 3
+    SwarmManagement = 'Automatic'
+}
        cDockerConfig DaemonJson
 {
     Ensure = 'Present'
     RestartOnChange = $false
     ExposeAPI = $true
-    Labels = "contoso.environment=dev","contoso.usage=internal"
+    
     EnableTLS = $false
 }
+
 	   cChocoInstaller installChoco {
             InstallDir = "c:\choco"
         }

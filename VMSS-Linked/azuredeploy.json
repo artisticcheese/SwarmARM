@@ -28,6 +28,12 @@
         "description": "Registration key to use to onboard to the Azure Automation DSC pull/reporting server"
       }
     },
+    "AutomationaccountName": {
+      "type": "string",
+      "metdata": {
+        "description": "Name of automation account"
+      }
+    },
     "privateKey": {
       "type": "securestring",
       "metadata": {
@@ -130,6 +136,13 @@
       "sku": "[parameters('windowsOSVersion')]",
       "version": "latest"
     },
+    "dscModules": {
+      "cDSCDockerSwarm": {
+        "moduleName": "cDSCDockerSwarm",
+        "moduleUri": "https://raw.github.com/Azure/azure-quickstart-templates/master/201-vmss-automation-dsc/xNetworking.zip"
+      }
+    },
+    "automationApiVersion": "2015-10-31",
     "DSCArchiveFolder": "DSC",
     "DSCArchiveFileName": "DSC.zip",
     "DSCConfigurationURL": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'), parameters('_artifactsLocationSasToken'))]",
@@ -194,6 +207,70 @@
           }
         ]
       }
+    },
+    {
+      "name": "[parameters('AutomationaccountName')]",
+      "type": "Microsoft.Automation/automationAccounts",
+      "apiVersion": "2015-01-01-preview",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "tags": {},
+
+      "resources": [
+        //{
+        //  "name": "[concat(parameters('automationAccountName'), '/', variables('dscModules').xNetworking.ModuleName)]",
+        //  "type": "microsoft.automation/automationAccounts/Modules",
+        //  "apiVersion": "[variables('automationApiVersion')]",
+        //  "tags": {},
+        //  "dependsOn": [
+        //    "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))]"
+        //  ],
+        //  "properties": {
+        //    "contentLink": {
+        //      "uri": "[variables('dscModules').xNetworking.ModuleUri]"
+        //    }
+        //  }
+        //},
+        {
+          "name": "swarmhost.localhost",
+          "type": "Configurations",
+          "apiVersion": "[variables('automationApiVersion')]",
+          //"location": "[parameters('automationRegionId')]",
+          "tags": {},
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))]"
+          ],
+          "properties": {
+            "logVerbose": "false",
+            "description": "Configuration for worker hosts",
+            //"state": "Published",
+            //"overwrite": "[variables('dscOverwrite')]",
+            "Source": {
+              "type": "uri",
+              "Value": "[parameters('configurationURI')]"
+            }
+          }
+        },
+        {
+          "name": "[parameters('jobid')]",
+          "type": "Compilationjobs",
+          "apiVersion": "[variables('automationApiVersion')]",
+          "location": "parameters('automationRegionId')]",
+          "tags": {},
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))]",
+            "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'),'/Modules/',variables('dscModules').xNetworking.ModuleName)]",
+            "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'),'/Configurations/', parameters('configurationName'))]"
+          ],
+          "properties": {
+            "configuration": {
+              "name": "[parameters('configurationName')]"
+            }
+          }
+        }
+
+
+      ]
     },
     {
       "type": "Microsoft.Network/loadBalancers",
@@ -436,6 +513,7 @@
                   //"forceUpdateTag": "[parameters('DSCExtensionTagVersion')]",
                   "settings": {
                     "configurationArguments": {
+
                       "RegistrationKey": {
                         "UserName": "PLACEHOLDER_DONOTUSE",
                         "Password": "[parameters('registrationKey')]"
@@ -486,15 +564,15 @@
           "LicenseType": { "value": "[parameters('LicenseType')]" },
           "_artifactsLocationSasToken": { "value": "[parameters('_artifactsLocationSasToken')]" },
           "_artifactsLocation": { "value": "[parameters('_artifactsLocation')]" },
-          "privateKey": {"value" :  "[parameters('privateKey')]"},
+          "privateKey": { "value": "[parameters('privateKey')]" },
           "serverCert": { "value": "[parameters('serverCert')]" },
-          "CACert": {"value": "[parameters('CACert')]"}
-            
-          }
-          }
-
+          "CACert": { "value": "[parameters('CACert')]" }
 
         }
-    
+      }
+
+
+    }
+
   ]
 }
