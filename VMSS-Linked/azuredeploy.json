@@ -618,9 +618,9 @@
                   }
                 },
                 {
-                  "name": "[uniquestring(resourceGroup().id, deployment().name)]",
+                  "name": "[guid(resourceGroup().id, deployment().name)]",
                   "type": "Compilationjobs",
-                  "apiVersion": "2015-01-01-preview",
+                  "apiVersion": "2015-10-31",
                   "tags": {},
                   "dependsOn": [
                     "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]",
@@ -629,8 +629,8 @@
                   "properties": {
                     "configuration": {
                       "name": "swarmhost"
-                    },
-                    "parameters": "4"
+                    }
+                    //"parameters": "4"
                   }
                 }
 

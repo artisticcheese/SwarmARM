@@ -3,6 +3,8 @@ Configuration swarmhost
 
 	    param
     (
+		[Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
 		[string] $SwarmManagerURI
     )
 

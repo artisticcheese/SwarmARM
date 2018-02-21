@@ -67,7 +67,7 @@
       "value": "Utility-RG"
     },
     "WorkerNodeDSCConfigURL": {
-      "value": "https://raw.githubusercontent.com/artisticcheese/SwarmARM/master/VMSS-Linked/swarmhost.localhost.ps1"
+      "value": "https://raw.githubusercontent.com/artisticcheese/SwarmARM/master/VMSS-Linked/swarmhost.ps1"
     }
   }
 }
