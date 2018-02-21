@@ -601,7 +601,7 @@
               "resources": [
 
                 {
-                  "name": "swarmhost.localhost",
+                  "name": "swarmhost",
                   "type": "configurations",
                   "apiVersion": "2018-01-15",
                   "location": "[resourceGroup().location]",
@@ -624,11 +624,11 @@
                   "tags": {},
                   "dependsOn": [
                     "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]",
-                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'),'/Configurations/swarmhost.localhost')]"
+                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'),'/Configurations/swarmhost')]"
                   ],
                   "properties": {
                     "configuration": {
-                      "name": "swarmhost.localhost"
+                      "name": "swarmhost"
                     },
                     "parameters": "4"
                   }
