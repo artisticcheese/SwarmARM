@@ -59,6 +59,12 @@
         },
         "secretName": "rootca"
       }
+    },
+    "AutomationaccountName": {
+      "value": "AutomationAccount"
+    },
+    "AutomationaccountRGName": {
+      "value": "Utility-RG"
     }
   }
 }

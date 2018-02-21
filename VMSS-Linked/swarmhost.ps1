@@ -1,4 +1,4 @@
-Configuration SwarmHost
+Configuration swarmhost
 {
 
 	    param
