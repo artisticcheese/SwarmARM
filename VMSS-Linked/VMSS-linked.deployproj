@@ -32,7 +32,7 @@
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
-    <Content Include="swarmhost.ps1" />
+    <Content Include="swarmhost.localhost.ps1" />
     <Content Include="nestedtemplates\swarmmanagerdeployment.json" />
     <Content Include="DSC\DSC.ps1" />
   </ItemGroup>
