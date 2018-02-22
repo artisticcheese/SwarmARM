@@ -82,7 +82,6 @@
               },
               "wmfVersion": "latest",
               "configurationArguments": {
-                "CustomData": "hello from ARM",
                 "SwarmManagerURI": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
 
               }

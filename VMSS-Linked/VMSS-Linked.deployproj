@@ -35,6 +35,7 @@
     <Content Include="swarmhost.ps1" />
     <Content Include="nestedtemplates\swarmmanagerdeployment.json" />
     <Content Include="DSC\DSC.ps1" />
+    <None Include="swarmmanager.ps1" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
