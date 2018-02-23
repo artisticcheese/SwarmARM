@@ -3,16 +3,17 @@ Configuration SwarmManager
     # Parameter help description
     param
     (
-		[string] $privateKey,
-		[string] $serverCert,
-		[string] $CAcert,
+		[string] $privateKey = (Get-AutomationVariable -Name privatekey),
+		[string] $serverCert = (Get-AutomationVariable -Name servercert),
+		[string] $CAcert = (Get-AutomationVariable -Name ca),
 		[string] $SwarmManagerURI
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cChoco
     Import-DSCResource -moduleName cDSCDockerSwarm
-
+    
+    
 
     Node localhost
     {

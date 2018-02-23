@@ -53,7 +53,8 @@
           "apiVersion": "2016-03-30",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]",
-            "OnboadAzureAutomation"
+            //"OnboadAzureAutomation"
+            "SwarmManagerNodeDscConfiguration"
           ],
           "tags": {
             "displayName": "DSC"
@@ -65,60 +66,138 @@
             "autoUpgradeMinorVersion": true,
             "forceUpdateTag": "5",
             "protectedSettings": {
-              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-              "configurationArguments": {
-                "privateKey": "[parameters('privatekey')]",
-                
-                "serverCert": "[parameters('serverCert')]",
-                "CACert": "[parameters('CACert')]"
+              "RegistrationKey": "[parameters('RegistrationKey')]"
+              //"configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+              //"configurationArguments": {
+              //  "privateKey": "[parameters('privatekey')]",
 
-              }
+              //  "serverCert": "[parameters('serverCert')]",
+              //  "CACert": "[parameters('CACert')]"
+
+              //}
             },
+            
             "settings": {
-              "configuration": {
-                        "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
-                        "script": "DSC.ps1",
-                        "function": "SwarmManager"
-              },
+              //"configuration": {
+              //  //"url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
+              //  //"script": "DSC.ps1",
+              //  //"function": "SwarmManager"
+              //},
               "wmfVersion": "latest",
               "configurationArguments": {
+                "RegistrationUrl": "[parameters('RegistrationUrl')]",
+                "NodeConfigurationName": "swarmmanager",
                 "SwarmManagerURI": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
 
               }
             }
 
           }
-        },
-        {
-          "name": "OnboadAzureAutomation",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2016-03-30",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
-          ],
-          "tags": {
-            "displayName": "OnboadAzureAutomation"
-          },
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.9",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[concat(parameters('_artifactsLocation'), '/', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), parameters('_artifactsLocationSasToken'))]"
-              ]
-            
-            },
-            "protectedSettings": {
-              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), ' -RegistrationKey ', parameters('RegistrationKey'), ' -RegistrationUrl ', parameters('RegistrationUrl'))]"
-            }
-
-          }
         }
+        //{
+        //  "name": "OnboadAzureAutomation",
+        //  "type": "extensions",
+        //  "location": "[resourceGroup().location]",
+        //  "apiVersion": "2016-03-30",
+        //  "dependsOn": [
+        //    "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
+        //  ],
+        //  "tags": {
+        //    "displayName": "OnboadAzureAutomation"
+        //  },
+        //  "properties": {
+        //    "publisher": "Microsoft.Compute",
+        //    "type": "CustomScriptExtension",
+        //    "typeHandlerVersion": "1.9",
+        //    "autoUpgradeMinorVersion": true,
+        //    "settings": {
+        //      "fileUris": [
+        //        "[concat(parameters('_artifactsLocation'), '/', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), parameters('_artifactsLocationSasToken'))]"
+        //      ]
+
+        //    },
+        //    "protectedSettings": {
+        //      "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), ' -RegistrationKey ', parameters('RegistrationKey'), ' -RegistrationUrl ', parameters('RegistrationUrl'))]"
+        //    }
+
+        //  }
+        //}
+      ]
+    },
+    {
+      "name": "SwarmManagerNodeDscConfiguration",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "resourceGroup": "[parameters('automationAccountRGName')]",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.1",
+          "resources": [
+            {
+              "apiversion": "2015-10-31",
+              "location": "[resourceGroup().location]",
+              "name": "[parameters('automationAccountName')]",
+              "type": "Microsoft.Automation/automationAccounts",
+              "properties": {
+                "sku": {
+                  "name": "Basic"
+                }
+              },
+              "tags": {
+
+              },
+              "resources": [
+                {
+                  "name": "swarmmanager",
+                  "type": "configurations",
+                  "apiVersion": "2018-01-15",
+                  "location": "[resourceGroup().location]",
+                  "dependsOn": [
+                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]"
+                  ],
+                  "properties": {
+                    "state": "Published",
+                    "overwrite": "true",
+                    "Source": {
+                      "type": "uri",
+                      "value": "[parameters('SwarmManagerNodeDSCConfigURL')]"
+                    }
+                  }
+                },
+                {
+                  "name": "[guid(resourceGroup().id, deployment().name)]",
+                  "type": "Compilationjobs",
+                  "apiVersion": "2015-10-31",
+                  "tags": {},
+                  "dependsOn": [
+                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]",
+                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'),'/Configurations/swarmmanager')]"
+                  ],
+                  "properties": {
+                    "configuration": {
+                      "name": "swarmmanager"
+
+                    },
+                    "parameters": {
+                      "SwarmManagerURI" : "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
+                      //"privateKey": "[parameters('privatekey')]",
+                      //"serverCert": "[parameters('serverCert')]",
+                      //"CACert": "[parameters('CACert')]"
+                    }
+
+                  }
+                }
+
+              ]
+            }
           ]
-        },
+        }
+
+      }
+    },
     {
       "name": "[parameters('dockerswarmstorageaccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
@@ -166,7 +245,7 @@
     {
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        
+
       ],
       "location": "[resourceGroup().location]",
       "name": "[parameters('swarmmanagerpublicIPName')]",
@@ -204,12 +283,12 @@
     "swarmmanagerpublicIPDnsName": { "type": "string" },
     "RegistrationKey": { "type": "securestring" },
     "RegistrationUrl": { "type": "string" },
+    "automationAccountRGName": { "type": "string" },
+    "automationAccountName": { "type": "string" },
+    "SwarmManagerNodeDSCConfigURL": {"type":  "string"},
     "LicenseType": { "type": "string" },
     "_artifactsLocation": {
-      "type": "string",
-      "metadata": {
-        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
-      }
+      "type": "string"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
@@ -233,5 +312,3 @@
     "DSCArchiveFileName": "DSC.zip"
   }
 }
-      
-    

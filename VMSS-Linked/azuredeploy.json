@@ -17,6 +17,14 @@
       }
 
     },
+    "SwarmManagerNodeDSCConfigURL": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/artisticcheese/SwarmARM/master/VMSS-Linked/swarmmanager.ps1",
+      "metadata": {
+        "description": "URL where configuration file for worker node is stored"
+      }
+
+    },
     "windowsOSVersion": {
       "type": "string",
       "defaultValue": "2016-Datacenter-with-Containers",
@@ -537,7 +545,7 @@
     {
       "name": "swarmmanagerdeployment",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2016-09-01",
+      "apiVersion": "2017-05-10",
       "dependsOn": [],
       "properties": {
         "mode": "Incremental",
@@ -568,7 +576,10 @@
           "_artifactsLocation": { "value": "[parameters('_artifactsLocation')]" },
           "privateKey": { "value": "[parameters('privateKey')]" },
           "serverCert": { "value": "[parameters('serverCert')]" },
-          "CACert": { "value": "[parameters('CACert')]" }
+          "CACert": { "value": "[parameters('CACert')]" },
+          "automationAccountRGName": { "value": "[parameters('AutomationaccountRGName')]" },
+          "automationAccountName": { "value": "[parameters('AutomationaccountName')]" },
+          "SwarmManagerNodeDSCConfigURL": { "value": "[parameters('SwarmManagerNodeDSCConfigURL')]" }
 
         }
       }
@@ -643,76 +654,8 @@
         }
 
       }
-    },
-    {
-      "name": "SwarmManagerNodeDscConfiguration",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2017-05-10",
-      "resourceGroup": "[parameters('automationAccountRGName')]",
-      "dependsOn": [],
-      "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.1",
-          "resources": [
-            {
-              "apiversion": "2015-10-31",
-              "location": "[resourceGroup().location]",
-              "name": "[parameters('automationAccountName')]",
-              "type": "Microsoft.Automation/automationAccounts",
-              "properties": {
-                "sku": {
-                  "name": "Basic"
-                }
-              },
-              "tags": {
-
-              },
-              "resources": [
-                {
-                  "name": "swarmhost",
-                  "type": "configurations",
-                  "apiVersion": "2018-01-15",
-                  "location": "[resourceGroup().location]",
-                  "dependsOn": [
-                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]"
-                  ],
-                  "properties": {
-                    "state": "Published",
-                    "overwrite": "true",
-                    "Source": {
-                      "type": "uri",
-                      "value": "[parameters('WorkerNodeDSCConfigURL')]"
-                    }
-                  }
-                },
-                {
-                  "name": "[guid(resourceGroup().id, deployment().name)]",
-                  "type": "Compilationjobs",
-                  "apiVersion": "2015-10-31",
-                  "tags": {},
-                  "dependsOn": [
-                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]",
-                    "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'),'/Configurations/swarmhost')]"
-                  ],
-                  "properties": {
-                    "configuration": {
-                      "name": "swarmhost"
-
-                    },
-                    "parameters": { "SwarmManagerURI": "[reference('swarmmanagerdeployment').outputs.returnedIPAddress.value]" }
-
-                  }
-                }
-
-              ]
-            }
-          ]
-        }
-
-      }
     }
+    
 
 
   ]
