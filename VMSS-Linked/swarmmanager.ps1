@@ -25,9 +25,10 @@ Import-DSCResource -moduleName xDSCFirewall
             RestartOnChange = $false
             ExposeAPI       = $true
             Labels          = "pet_swarm_manager=true"
-            EnableTLS       = $true
+            
 
-			BaseConfigJson = '{"tlskey" : "C:\\ProgramData\\docker\\certs.d\\key.cer",
+			BaseConfigJson = '{"tlsverify": true,
+				"tlskey" : "C:\\ProgramData\\docker\\certs.d\\key.cer",
     "tlscert" : "C:\\ProgramData\\docker\\certs.d\\cert.cer",
     "tlscacert" : "C:\\ProgramData\\docker\\certs.d\\ca.cer"}' 
         }

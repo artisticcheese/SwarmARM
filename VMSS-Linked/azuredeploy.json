@@ -580,6 +580,7 @@
                     "state": "Published",
                     "overwrite": "true",
                     "Source": {
+                      "Version": "1.1",
                       "type": "uri",
                       "value": "[parameters('WorkerNodeDSCConfigURL')]"
                     }
