@@ -232,53 +232,7 @@
         ]
       }
     },
-    //{
-    //  "type": "Microsoft.Automation/automationAccounts/configurations",
-    //  "name": "automationaccount/swarmhost.localhost",
-    //  "location": "SouthCentralUS",
-    //  "apiVersion": "[variables('automationApiVersion')]",
-    //  "properties": {
-    //    "logVerbose": "false",
-    //    "description": "Configuration for worker hosts",
-    //    "Source": {
-    //      "type": "uri",
-    //      "Value": "https://raw.githubusercontent.com/artisticcheese/SwarmARM/master/VMSS-Linked/swarmhost.ps1"
-    //    }
-    //  }
-    //},
-    //{
-    //  "name": "[resourceId('Utility-RG', 'Microsoft.Automation/automationAccounts/', 'AutomationAccount')]",
-    //  "type": "Microsoft.Automation/automationAccounts",
-    //  "apiVersion": "2015-01-01-preview",
-    //  "location": "SouthCentralUS",
-    //  "dependsOn": [],
-    //  "resources": [
-
-
-    //    {
-    //      "name": "[uniqueString(resourceGroup().id, deployment().name)]",
-    //      "type": "Compilationjobs",
-    //      "apiVersion": "[variables('automationApiVersion')]",
-    //      "location": "parameters('automationRegionId')]",
-    //      "tags": {},
-    //      "dependsOn": [
-    //        "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))]",
-
-    //        "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'),'/Configurations/swarmhost.localhost')]"
-    //      ],
-    //      "properties": {
-    //        "configuration": {
-    //          "name": "swarmhost.localhost"
-    //        },
-    //        "parameters": {
-    //          "SwarmManagerURI": "[reference('swarmmanagerdeployment').outputs.returnedIPAddress.value]"
-    //        }
-    //      }
-    //    }
-
-
-    //  ]
-    //},
+   
     {
       "type": "Microsoft.Network/loadBalancers",
       "name": "[variables('loadBalancerName')]",
@@ -519,19 +473,18 @@
                 "name": "Microsoft.Powershell.DSC",
                 "properties": {
                   "autoUpgradeMinorVersion": true,
-                  "typeHandlerVersion": "2.72",
+                  "typeHandlerVersion": "2.9",
                   "type": "DSC",
                   "publisher": "Microsoft.Powershell",
                   //"forceUpdateTag": "[parameters('DSCExtensionTagVersion')]",
                   "settings": {
                     "configurationArguments": {
-
                       "RegistrationKey": {
                         "UserName": "PLACEHOLDER_DONOTUSE",
                         "Password": "[parameters('registrationKey')]"
                       },
                       "RegistrationUrl": "[parameters('registrationUrl')]",
-                      "NodeConfigurationName": "swarmHost",
+                      "NodeConfigurationName": "swarmHost.localhost",
                       "RebootNodeIfNeeded": true,
                       "ConfigurationMode": "ApplyAndAutoCorrect"
                     }
@@ -619,7 +572,7 @@
                   "name": "swarmhost",
                   "type": "configurations",
                   "apiVersion": "2018-01-15",
-                  "location": "[resourceGroup().location]",
+                  "location": "[reference(variables('automationAccountResourceId'), '2017-05-15-preview','Full').location]",
                   "dependsOn": [
                     "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]"
                   ],

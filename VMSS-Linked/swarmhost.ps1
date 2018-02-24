@@ -10,7 +10,7 @@ Configuration swarmhost
 
 
 Import-DscResource -ModuleName PSDesiredStateConfiguration
-
+Import-DSCResource -module xDSCFirewall
 Import-DscResource -ModuleName cChoco
 Import-DSCResource -moduleName cDSCDockerSwarm
 
@@ -29,14 +29,27 @@ Node localhost
 {
     Ensure = 'Present'
     RestartOnChange = $false
-    ExposeAPI = $true
-    
+    ExposeAPI = $false
     EnableTLS = $false
+	 Dependson = @("[xDSCFirewall]DisablePublic", "[xDSCFirewall]DisablePublic")
 }
 
 	   cChocoInstaller installChoco {
             InstallDir = "c:\choco"
         }
+xDSCFirewall DisablePublic
+{
+  Ensure = "Absent"
+  Zone = "Public"
+
+}
+	  xDSCFirewall DisablePrivate
+{
+  Ensure = "Absent"
+  Zone = "Private"
+
+}
+
         cChocoPackageInstallerSet installSomeStuff {
             Ensure = 'Present'
             Name = @(

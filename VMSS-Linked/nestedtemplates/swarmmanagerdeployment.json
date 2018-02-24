@@ -53,7 +53,6 @@
           "apiVersion": "2016-03-30",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]",
-            //"OnboadAzureAutomation"
             "SwarmManagerNodeDscConfiguration"
           ],
           "tags": {
@@ -70,16 +69,12 @@
                 "registrationKeyPrivate": "[parameters('RegistrationKey')]"
               }
             },
-            
             "settings": {
               "configurationArguments": {
                 "RegistrationUrl": "[parameters('RegistrationUrl')]",
                 "NodeConfigurationName": "swarmmanager.localhost",
-
                 "RegistrationKey": {
-
                   "UserName": "PLACEHOLDER_DONOTUSE",
-                  //"Password": "PrivateSettingsRef:registrationKeyPrivate"
                   "Password": "[parameters('RegistrationKey')]"
                 }
               }
@@ -99,7 +94,7 @@
         "mode": "Incremental",
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.1",
+          "contentVersion": "1.0.0.2",
           "resources": [
             {
               "apiversion": "2015-10-31",
@@ -127,6 +122,7 @@
                     "state": "Published",
                     "overwrite": "true",
                     "Source": {
+                      "Version":  "1.0",
                       "type": "uri",
                       "value": "[parameters('SwarmManagerNodeDSCConfigURL')]"
                     }
@@ -146,6 +142,7 @@
                       "name": "swarmmanager"
 
                     },
+                    "newNodeConfigurationBuildVersionRequired": true,
                     "parameters": {
                       "SwarmManagerURI": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
                       //"privateKey": "[parameters('privatekey')]",

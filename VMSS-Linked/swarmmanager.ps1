@@ -24,7 +24,7 @@ Configuration SwarmManager
             RestartOnChange = $false
             ExposeAPI       = $true
             Labels          = "pet_swarm_manager=true"
-            EnableTLS       = $false
+            EnableTLS       = $true
 
 			BaseConfigJson = '{"tlskey" : "C:\\ProgramData\\docker\\certs.d\\key.cer",
     "tlscert" : "C:\\ProgramData\\docker\\certs.d\\cert.cer",
