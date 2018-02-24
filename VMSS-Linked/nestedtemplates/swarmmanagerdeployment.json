@@ -226,9 +226,6 @@
     "swarmmanager1VmSize": { "type": "string" },
     "adminUsername": { "type": "string" },
     "adminPassword": { "type": "securestring" },
-    "privateKey": { "type": "securestring" },
-    "serverCert": { "type": "securestring" },
-    "CACert": { "type": "securestring" },
     "dockerswarmstorageaccountName": { "type": "string" },
     "dockerswarmstorageaccountType": { "type": "string" },
     "swarmmanager1NicName": { "type": "string" },
@@ -264,11 +261,5 @@
       "value": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
     }
 
-  },
-  "variables": {
-    "OnboadAzureAutomationScriptFolder": "CustomScripts",
-    "OnboadAzureAutomationScriptFileName": "OnboadAzureAutomation.ps1",
-    "DSCArchiveFolder": "DSC",
-    "DSCArchiveFileName": "DSC.zip"
   }
 }

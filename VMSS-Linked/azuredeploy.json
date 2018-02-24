@@ -56,25 +56,6 @@
         "description": "Name of automation account"
       }
     },
-    "privateKey": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Private Key for server certificate for Docker swarm"
-      }
-    },
-    "serverCert": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Server certificate for for Docker swarm"
-      }
-    },
-    "CACert": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Certificate authority for Server certificate for for Docker swarm"
-      }
-    },
-
     "registrationUrl": {
       "type": "string",
       "metadata": {
@@ -160,16 +141,7 @@
       "sku": "[parameters('windowsOSVersion')]",
       "version": "latest"
     },
-    "dscModules": {
-      "cDSCDockerSwarm": {
-        "moduleName": "cDSCDockerSwarm",
-        "moduleUri": "https://raw.github.com/Azure/azure-quickstart-templates/master/201-vmss-automation-dsc/xNetworking.zip"
-      }
-    },
     "automationApiVersion": "2015-10-31",
-    "DSCArchiveFolder": "DSC",
-    "DSCArchiveFileName": "DSC.zip",
-    "DSCConfigurationURL": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'), parameters('_artifactsLocationSasToken'))]",
     "virtualNetworkID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "appGwPublicIPAddressName": "[concat(variables('namingInfix'), 'appGwPip')]",
     "bePoolName": "[concat(variables('namingInfix'), 'bepool')]",
@@ -529,9 +501,6 @@
           "LicenseType": { "value": "[parameters('LicenseType')]" },
           "_artifactsLocationSasToken": { "value": "[parameters('_artifactsLocationSasToken')]" },
           "_artifactsLocation": { "value": "[parameters('_artifactsLocation')]" },
-          "privateKey": { "value": "[parameters('privateKey')]" },
-          "serverCert": { "value": "[parameters('serverCert')]" },
-          "CACert": { "value": "[parameters('CACert')]" },
           "automationAccountRGName": { "value": "[parameters('AutomationaccountRGName')]" },
           "automationAccountName": { "value": "[parameters('AutomationaccountName')]" },
           "SwarmManagerNodeDSCConfigURL": { "value": "[parameters('SwarmManagerNodeDSCConfigURL')]" },

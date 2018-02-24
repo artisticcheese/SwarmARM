@@ -68,6 +68,7 @@ Import-DSCResource -moduleName xDSCFirewall
             )
             
         }
+		#Have to use Script to save files with [File] resource is saving by default in UTF8-BOM
 		Script CertFiles
 {
   SetScript = {
@@ -80,26 +81,10 @@ Import-DSCResource -moduleName xDSCFirewall
 	  (Test-Path -Path "C:\ProgramData\docker\certs.d\cert.cer") -and
 	  (Test-Path -Path "C:\ProgramData\docker\certs.d\ca.cer")
   }
-  GetScript = { @{CertFiles = (Test-Path $BatPath )} }
+  GetScript = { @{CertFiles = (Test-Path "C:\ProgramData\docker\certs.d\ca.cer" )} }
 }
 
-		#File PrivateKey{
-		#	Destinationpath = "$($env:programdata)\docker\certs.d\key.cer"
-		#	Contents = $privateKey
-		#	Force = $true
-		#}
-		#File ServerCert
-		#{
-		#				Destinationpath = "$($env:programdata)\docker\certs.d\cert.cer"
-		#	Contents = $serverCert
-		#	Force = $true
-		#}
-		#File CACert
-		#{
-		#	Destinationpath = "$($env:programdata)\docker\certs.d\ca.cer"
-		#	Contents = $CAcert
-		#	Force = $true
-		#}
+		
     }
 }
 SwarmManager -outputpath .\out.txt

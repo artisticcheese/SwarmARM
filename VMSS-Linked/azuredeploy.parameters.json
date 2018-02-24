@@ -36,30 +36,6 @@
     "LicenseType": {
       "value": "Windows_Server"
     },
-    "privateKey": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/7d0ba820-d01c-4b11-ae4b-e9134b0999d8/resourceGroups/Utility-RG/providers/Microsoft.KeyVault/vaults/McafeeKeyVault"
-        },
-        "secretName": "privatekey"
-      }
-    },
-    "serverCert": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/7d0ba820-d01c-4b11-ae4b-e9134b0999d8/resourceGroups/Utility-RG/providers/Microsoft.KeyVault/vaults/McafeeKeyVault"
-        },
-        "secretName": "servercert"
-      }
-    },
-    "CACert": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/7d0ba820-d01c-4b11-ae4b-e9134b0999d8/resourceGroups/Utility-RG/providers/Microsoft.KeyVault/vaults/McafeeKeyVault"
-        },
-        "secretName": "rootca"
-      }
-    },
     "AutomationaccountName": {
       "value": "AutomationAccount"
     },
