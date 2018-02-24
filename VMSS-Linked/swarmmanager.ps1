@@ -13,6 +13,8 @@ Configuration SwarmManager
     Import-DscResource -ModuleName cChoco
     Import-DSCResource -moduleName cDSCDockerSwarm
 Import-DSCResource -moduleName xDSCFirewall
+
+	
     
     
 
@@ -21,7 +23,7 @@ Import-DSCResource -moduleName xDSCFirewall
  
 
         cDockerConfig DaemonJson {
-			DependsOn = @("[File]PrivateKey","[File]ServerCert","[File]CACert")
+			DependsOn = @("[Script]CertFiles")
             Ensure          = 'Present'
             RestartOnChange = $true
             ExposeAPI       = $true
@@ -66,24 +68,38 @@ Import-DSCResource -moduleName xDSCFirewall
             )
             
         }
-		
-		File PrivateKey{
-			Destinationpath = "$($env:programdata)\docker\certs.d\key.cer"
-			Contents = $privateKey
-			Force = $true
-		}
-		File ServerCert
-		{
-						Destinationpath = "$($env:programdata)\docker\certs.d\cert.cer"
-			Contents = $serverCert
-			Force = $true
-		}
-		File CACert
-		{
-			Destinationpath = "$($env:programdata)\docker\certs.d\ca.cer"
-			Contents = $CAcert
-			Force = $true
-		}
+		Script CertFiles
+{
+  SetScript = {
+    $privateKey | out-file -path "C:\ProgramData\docker\certs.d\key.cer" -Encoding ascii
+	  $serverCert | out-file -path "C:\ProgramData\docker\certs.d\cert.cer" -Encoding ascii
+	  $CAcert | out-file -path "C:\ProgramData\docker\certs.d\ca.cer" -Encoding ascii
+  }
+  TestScript = { 
+	  (Test-Path -Path "C:\ProgramData\docker\certs.d\key.cer") -and
+	  (Test-Path -Path "C:\ProgramData\docker\certs.d\cert.cer") -and
+	  (Test-Path -Path "C:\ProgramData\docker\certs.d\ca.cer")
+  }
+  GetScript = { @{CertFiles = (Test-Path $BatPath )} }
+}
+
+		#File PrivateKey{
+		#	Destinationpath = "$($env:programdata)\docker\certs.d\key.cer"
+		#	Contents = $privateKey
+		#	Force = $true
+		#}
+		#File ServerCert
+		#{
+		#				Destinationpath = "$($env:programdata)\docker\certs.d\cert.cer"
+		#	Contents = $serverCert
+		#	Force = $true
+		#}
+		#File CACert
+		#{
+		#	Destinationpath = "$($env:programdata)\docker\certs.d\ca.cer"
+		#	Contents = $CAcert
+		#	Force = $true
+		#}
     }
 }
 SwarmManager -outputpath .\out.txt
