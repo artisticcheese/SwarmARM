@@ -72,9 +72,9 @@ Import-DSCResource -moduleName xDSCFirewall
 		Script CertFiles
 {
   SetScript = {
-    $privateKey | out-file -path "C:\ProgramData\docker\certs.d\key.cer" -Encoding ascii
-	  $serverCert | out-file -path "C:\ProgramData\docker\certs.d\cert.cer" -Encoding ascii
-	  $CAcert | out-file -path "C:\ProgramData\docker\certs.d\ca.cer" -Encoding ascii
+    $privateKey | out-file -FilePath "C:\ProgramData\docker\certs.d\key.cer" -Encoding ascii
+	  $serverCert | out-file -FilePath "C:\ProgramData\docker\certs.d\cert.cer" -Encoding ascii
+	  $CAcert | out-file -FilePath "C:\ProgramData\docker\certs.d\ca.cer" -Encoding ascii
   }
   TestScript = { 
 	  (Test-Path -Path "C:\ProgramData\docker\certs.d\key.cer") -and

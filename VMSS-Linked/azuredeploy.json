@@ -445,7 +445,7 @@
                 "name": "Microsoft.Powershell.DSC",
                 "properties": {
                   "autoUpgradeMinorVersion": true,
-                  "typeHandlerVersion": "2.9",
+                  "typeHandlerVersion": "2.72",
                   "type": "DSC",
                   "publisher": "Microsoft.Powershell",
                   //"forceUpdateTag": "[parameters('DSCExtensionTagVersion')]",
@@ -453,16 +453,20 @@
                     "configurationArguments": {
                       "RegistrationKey": {
                         "UserName": "PLACEHOLDER_DONOTUSE",
-                        "Password": "[parameters('registrationKey')]"
+                        "Password": "PrivateSettingsRef:registrationKeyPrivate"
                       },
                       "RegistrationUrl": "[parameters('registrationUrl')]",
                       "NodeConfigurationName": "swarmHost.localhost",
                       "RebootNodeIfNeeded": true,
                       "ConfigurationMode": "ApplyAndAutoCorrect"
                     }
+                  },
+                  "protectedSettings": {
+                    "Items": {
+                      "registrationKeyPrivate": "[parameters('registrationKey')]"
+                    }
                   }
                 }
-              }
             ]
           }
         }
