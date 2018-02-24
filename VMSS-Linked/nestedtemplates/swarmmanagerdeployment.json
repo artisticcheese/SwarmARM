@@ -66,62 +66,27 @@
             "autoUpgradeMinorVersion": true,
             "forceUpdateTag": "5",
             "protectedSettings": {
-              "RegistrationKey": "[parameters('RegistrationKey')]"
-              //"configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-              //"configurationArguments": {
-              //  "privateKey": "[parameters('privatekey')]",
-
-              //  "serverCert": "[parameters('serverCert')]",
-              //  "CACert": "[parameters('CACert')]"
-
-              //}
+              "Items": {
+                "registrationKeyPrivate": "[parameters('RegistrationKey')]"
+              }
             },
             
             "settings": {
-              //"configuration": {
-              //  //"url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
-              //  //"script": "DSC.ps1",
-              //  //"function": "SwarmManager"
-              //},
-              "wmfVersion": "latest",
               "configurationArguments": {
                 "RegistrationUrl": "[parameters('RegistrationUrl')]",
-                "NodeConfigurationName": "swarmmanager",
-                "SwarmManagerURI": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
+                "NodeConfigurationName": "swarmmanager.localhost",
 
+                "RegistrationKey": {
+
+                  "UserName": "PLACEHOLDER_DONOTUSE",
+                  //"Password": "PrivateSettingsRef:registrationKeyPrivate"
+                  "Password": "[parameters('RegistrationKey')]"
+                }
               }
             }
 
           }
         }
-        //{
-        //  "name": "OnboadAzureAutomation",
-        //  "type": "extensions",
-        //  "location": "[resourceGroup().location]",
-        //  "apiVersion": "2016-03-30",
-        //  "dependsOn": [
-        //    "[resourceId('Microsoft.Compute/virtualMachines', parameters('swarmmanager1Name'))]"
-        //  ],
-        //  "tags": {
-        //    "displayName": "OnboadAzureAutomation"
-        //  },
-        //  "properties": {
-        //    "publisher": "Microsoft.Compute",
-        //    "type": "CustomScriptExtension",
-        //    "typeHandlerVersion": "1.9",
-        //    "autoUpgradeMinorVersion": true,
-        //    "settings": {
-        //      "fileUris": [
-        //        "[concat(parameters('_artifactsLocation'), '/', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), parameters('_artifactsLocationSasToken'))]"
-        //      ]
-
-        //    },
-        //    "protectedSettings": {
-        //      "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('OnboadAzureAutomationScriptFolder'), '/', variables('OnboadAzureAutomationScriptFileName'), ' -RegistrationKey ', parameters('RegistrationKey'), ' -RegistrationUrl ', parameters('RegistrationUrl'))]"
-        //    }
-
-        //  }
-        //}
       ]
     },
     {
@@ -138,7 +103,7 @@
           "resources": [
             {
               "apiversion": "2015-10-31",
-              "location": "[resourceGroup().location]",
+              "location": "[reference(parameters('automationAccountResourceId'), '2017-05-15-preview','Full').location]",
               "name": "[parameters('automationAccountName')]",
               "type": "Microsoft.Automation/automationAccounts",
               "properties": {
@@ -154,7 +119,7 @@
                   "name": "swarmmanager",
                   "type": "configurations",
                   "apiVersion": "2018-01-15",
-                  "location": "[resourceGroup().location]",
+                  "location": "[reference(parameters('automationAccountResourceId'), '2017-05-15-preview','Full').location]",
                   "dependsOn": [
                     "[concat('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]"
                   ],
@@ -182,7 +147,7 @@
 
                     },
                     "parameters": {
-                      "SwarmManagerURI" : "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
+                      "SwarmManagerURI": "[reference(parameters('swarmmanager1NicName')).ipConfigurations[0].properties.privateIPAddress]"
                       //"privateKey": "[parameters('privatekey')]",
                       //"serverCert": "[parameters('serverCert')]",
                       //"CACert": "[parameters('CACert')]"
@@ -285,7 +250,8 @@
     "RegistrationUrl": { "type": "string" },
     "automationAccountRGName": { "type": "string" },
     "automationAccountName": { "type": "string" },
-    "SwarmManagerNodeDSCConfigURL": {"type":  "string"},
+    "SwarmManagerNodeDSCConfigURL": { "type": "string" },
+    "automationAccountResourceId": {"type": "string"},
     "LicenseType": { "type": "string" },
     "_artifactsLocation": {
       "type": "string"

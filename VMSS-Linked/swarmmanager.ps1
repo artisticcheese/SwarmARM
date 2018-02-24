@@ -28,7 +28,7 @@ Configuration SwarmManager
 
 			BaseConfigJson = '{"tlskey" : "C:\\ProgramData\\docker\\certs.d\\key.cer",
     "tlscert" : "C:\\ProgramData\\docker\\certs.d\\cert.cer",
-    "tlsCAcert" : "C:\\ProgramData\\docker\\certs.d\\ca.cer"}' 
+    "tlscacert" : "C:\\ProgramData\\docker\\certs.d\\ca.cer"}' 
         }
 		cDockerSwarm Swarm {
     DependsOn = '[cDockerConfig]DaemonJson'

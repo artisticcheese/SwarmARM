@@ -152,6 +152,8 @@
     "subnetName": "[concat(variables('namingInfix'), 'subnet')]",
     "nicName": "[concat(variables('namingInfix'), 'nic')]",
     "ipConfigName": "[concat(variables('namingInfix'), 'ipconfig')]",
+    "swarmanagerdeploymentname": "[concat('swarmmanagerdeployment-', uniquestring(deployment().name))]",
+    "automationAccountResourceId": "[resourceId(parameters('automationAccountRGName'),'Microsoft.Automation/automationAccounts',parameters('automationAccountName'))]",
     "imageReference": {
       "publisher": "MicrosoftWindowsServer",
       "offer": "WindowsServer",
@@ -543,7 +545,7 @@
     },
 
     {
-      "name": "swarmmanagerdeployment",
+      "name": "[variables('swarmanagerdeploymentname')]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "dependsOn": [],
@@ -579,7 +581,8 @@
           "CACert": { "value": "[parameters('CACert')]" },
           "automationAccountRGName": { "value": "[parameters('AutomationaccountRGName')]" },
           "automationAccountName": { "value": "[parameters('AutomationaccountName')]" },
-          "SwarmManagerNodeDSCConfigURL": { "value": "[parameters('SwarmManagerNodeDSCConfigURL')]" }
+          "SwarmManagerNodeDSCConfigURL": { "value": "[parameters('SwarmManagerNodeDSCConfigURL')]" },
+          "automationAccountResourceId": { "value": "[variables('automationAccountResourceId')]" }
 
         }
       }
@@ -600,7 +603,7 @@
           "resources": [
             {
               "apiversion": "2015-10-31",
-              "location": "[resourceGroup().location]",
+              "location": "[reference(variables('automationAccountResourceId'), '2017-05-15-preview','Full').location]",
               "name": "[parameters('automationAccountName')]",
               "type": "Microsoft.Automation/automationAccounts",
               "properties": {
@@ -643,7 +646,7 @@
                       "name": "swarmhost"
 
                     },
-                    "parameters": { "SwarmManagerURI": "[reference('swarmmanagerdeployment').outputs.returnedIPAddress.value]" }
+                    "parameters": { "SwarmManagerURI": "[reference(variables('swarmanagerdeploymentname')).outputs.returnedIPAddress.value]" }
 
                   }
                 }
