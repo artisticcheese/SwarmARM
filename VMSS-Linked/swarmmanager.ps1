@@ -67,7 +67,7 @@ Import-DSCResource -moduleName xDSCFirewall
         }
 		
 		File PrivateKey{
-			Destinationpath = "$($env:programdata)\docker\certs.d\privateKey.cer"
+			Destinationpath = "$($env:programdata)\docker\certs.d\key.cer"
 			Contents = $privateKey
 			Force = $true
 		}

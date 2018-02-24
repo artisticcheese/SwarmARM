@@ -122,7 +122,7 @@
                     "state": "Published",
                     "overwrite": "true",
                     "Source": {
-                      "Version":  "1.1",
+                      "Version":  "1.2",
                       "type": "uri",
                       "value": "[parameters('SwarmManagerNodeDSCConfigURL')]"
                     }
