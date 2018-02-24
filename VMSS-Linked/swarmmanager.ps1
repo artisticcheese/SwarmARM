@@ -21,8 +21,9 @@ Import-DSCResource -moduleName xDSCFirewall
  
 
         cDockerConfig DaemonJson {
+			DependsOn = @("[File]PrivateKey","[File]ServerCert","[File]CACert")
             Ensure          = 'Present'
-            RestartOnChange = $false
+            RestartOnChange = $true
             ExposeAPI       = $true
             Labels          = "pet_swarm_manager=true"
             
