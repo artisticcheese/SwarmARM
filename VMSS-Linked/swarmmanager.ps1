@@ -12,6 +12,7 @@ Configuration SwarmManager
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cChoco
     Import-DSCResource -moduleName cDSCDockerSwarm
+Import-DSCResource -moduleName xDSCFirewall
     
     
 
@@ -30,6 +31,18 @@ Configuration SwarmManager
     "tlscert" : "C:\\ProgramData\\docker\\certs.d\\cert.cer",
     "tlscacert" : "C:\\ProgramData\\docker\\certs.d\\ca.cer"}' 
         }
+		xDSCFirewall DisablePublic
+{
+  Ensure = "Absent"
+  Zone = "Public"
+
+}
+	  xDSCFirewall DisablePrivate
+{
+  Ensure = "Absent"
+  Zone = "Private"
+
+}
 		cDockerSwarm Swarm {
     DependsOn = '[cDockerConfig]DaemonJson'
     SwarmMasterURI = "$($SwarmManagerURI):2377"

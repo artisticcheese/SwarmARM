@@ -10,7 +10,7 @@ Configuration swarmhost
 
 
 Import-DscResource -ModuleName PSDesiredStateConfiguration
-Import-DSCResource -module xDSCFirewall
+Import-DSCResource -moduleName xDSCFirewall
 Import-DscResource -ModuleName cChoco
 Import-DSCResource -moduleName cDSCDockerSwarm
 
